@@ -1,10 +1,8 @@
-import {
-  chromeLauncher,
-  summaryReporter,
-  defaultReporter,
-} from "@web/test-runner";
+import { summaryReporter, defaultReporter } from "@web/test-runner";
+import { playwrightLauncher } from "@web/test-runner-playwright";
 import { exec } from "child_process";
 import failOnly from "./test/lib/fail-only.mjs";
+import { chromeOptions } from "./scripts/chrome-for-testing/browser-runtime.cjs";
 
 let config = {
   testRunnerHtml: (testFramework) => `
@@ -43,6 +41,14 @@ let config = {
     include: ["src/**/*"],
   },
   files: "test/*.js",
+  browsers: (process.env.HYPER_TEST_BROWSERS || "chromium")
+    .split(",")
+    .map((product) =>
+      playwrightLauncher({
+        product,
+        ...(product === "chromium" ? { launchOptions: chromeOptions() } : {}),
+      }),
+    ),
   plugins: [failOnly],
   reporters: [summaryReporter(), defaultReporter()],
 };

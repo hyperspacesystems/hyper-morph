@@ -8,3 +8,5 @@ docs/evidence
 perf/page.html
 package-lock.json
 test/counterexamples/cases/
+scripts/chrome-for-testing/browser-runtime.cjs
+scripts/chrome-for-testing/configure-linux-sandbox.cjs

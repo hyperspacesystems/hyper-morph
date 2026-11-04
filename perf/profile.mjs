@@ -3,6 +3,7 @@
 // the functions with the most self time.
 import { chromium } from "playwright";
 import { spawn } from "node:child_process";
+import { chromeOptions } from "../scripts/chrome-for-testing/browser-runtime.cjs";
 
 const kind = process.argv[2] || "clean";
 const port = 5699;
@@ -11,7 +12,7 @@ const server = spawn("npx", ["http-server", ".", "-p", String(port), "-s"], {
 });
 await new Promise((r) => setTimeout(r, 1500));
 try {
-  const browser = await chromium.launch();
+  const browser = await chromium.launch(chromeOptions());
   const page = await browser.newPage();
   await page.goto(`http://localhost:${port}/perf/page.html`);
   await page.waitForFunction(() => window.benchReady);
