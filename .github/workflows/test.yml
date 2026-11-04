@@ -16,7 +16,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npx playwright install --with-deps chromium
+      - run: npx playwright install-deps chromium && npm run browser:install && node scripts/chrome-for-testing/configure-linux-sandbox.cjs
       - run: npm run format:check
       - run: npm run build && git diff --exit-code dist/
       - run: npm run test:chrome -- --fail-only
