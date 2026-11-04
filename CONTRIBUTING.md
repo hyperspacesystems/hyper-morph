@@ -46,8 +46,14 @@ npm run build         # dist/hyper-morph.min.js
 ```
 
 `test/README.md` describes the suites, the compat shim the inherited suites
-run through, and the perf harness. Playwright needs its Chromium once:
-`npx playwright install --with-deps chromium`.
+run through, and the perf harness. Install the pinned test browser once with
+`npm run browser:install`, which installs the exact Chrome for Testing
+`156.0.8078.80` archive from `scripts/chrome-for-testing/browser-runtime.json`
+with SHA256 verification. `package.json` pins `playwright` at `1.64.1`, which
+still bundles an insufficiently patched Chromium `156.0.8078.4`. Run
+`node scripts/chrome-for-testing/browser-runtime.cjs check` to report the
+actual version and path, and `npx playwright install-deps chromium` on Linux
+for system libraries. The Chromium sandbox is enabled by default.
 
 ## Adding a merge rule
 
