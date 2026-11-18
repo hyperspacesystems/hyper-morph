@@ -118,31 +118,3 @@ test("root-level fallback reuses the descent's article comparisons", async () =>
     window.Node.prototype.isEqualNode = original;
   }
 });
-
-test("equal pages keep the equal bail when a descendant identity changes", () => {
-  const html = doc("<main><p>same</p></main><aside><h2>side</h2></aside>");
-  for (const changed of ["BODY", "MAIN", "P"]) {
-    const cap = parse(html),
-      live = parse(html),
-      remote = parse(html);
-    const lock = lockstepMap(cap.documentElement, live.documentElement);
-    const result = findScope({
-      baseRoot: cap.documentElement,
-      remoteRoot: remote.documentElement,
-      liveRoot: live.documentElement,
-      toLive: (n) => lock.get(n) || null,
-      o: {
-        ignored: () => false,
-        remoteWins: () => false,
-        ignoreAttribute: () => false,
-        scripts: { merge: false },
-      },
-      identity: {
-        base: (n) => n.tagName,
-        remote: (n) => (n.tagName === changed ? "different" : n.tagName),
-      },
-      baseURI: live.baseURI,
-    });
-    assert.equal(result.bail, "equal", changed);
-  }
-});

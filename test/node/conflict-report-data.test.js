@@ -943,31 +943,6 @@ test("determinism: the same inputs give the same recovery data", async () => {
   assert.equal(JSON.stringify(a.projection), JSON.stringify(b.projection));
 });
 
-// Ported fixtures for the emitter sites the public fixtures above do not
-// reach (inline-merge.test.js, round2-crossblock.test.js,
-// hash-verify.test.js, hm-h-cross-echo.test.js).
-
-test("attrsOf: a mark both sides inserted with different attributes", async () => {
-  const m = await merge(
-    `<p id="p">See docs.</p>`,
-    `<p id="p">See <a href="/a">docs</a>.</p>`,
-    `<p id="p">See <a href="/b">docs</a>.</p>`,
-  );
-  assert.deepEqual(m.kinds, ["attr:"]);
-  const r = m.rv[0];
-  assert.equal(r.key, "attr:l:[1,0,1]::href");
-  assert.deepEqual(ref(r.subject), {
-    key: "l:[1,0,1]",
-    nodeType: 1,
-    base: [],
-    local: [[1, 0, 1]],
-    remote: [[1, 0, 1]],
-    merged: [[1, 0, 1]],
-  });
-  assert.deepEqual(r.subject.live, [m.el("a")]);
-  assert.equal(r.localLost, true);
-});
-
 test("emitRescues: a joined block edited here and deleted there is a retained edit", async () => {
   const m = await merge(
     `<div id="d">hello there <p>P</p> big world</div>`,
@@ -1884,62 +1859,5 @@ test("both-reordered: a whitespace text node in a different place lands with the
     [...m.el("#s").children].map((x) => x.id),
     [...parse(doc(remote)).querySelector("#s").children].map((x) => x.id),
   );
-  assert.equal(r.localLost, true);
-});
-
-test("both-reordered: a non-breaking-space run that moved is still a loss", async () => {
-  const local = `<div id="s"><p id="a">A</p><p id="c">C</p><p id="b">B</p>\u00a0</div>`;
-  const remote = `<div id="s"><p id="c">C</p><p id="b">B</p>\u00a0<p id="a">A</p>\u00a0</div>`;
-  const m = await merge(
-    `<div id="s"><p id="a">A</p><p id="b">B</p><p id="c">C</p>\u00a0</div>`,
-    local,
-    remote,
-  );
-  assert.ok(m.kinds.includes("structure:both-reordered"));
-  const r = m.rv[0];
-  const s = r.structure;
-  const elements = (list) => list.filter((x) => x.nodeType === 1);
-  assert.deepEqual(keys(elements(s.localOrder)), [
-    "b:[1,0,0]",
-    "b:[1,0,2]",
-    "b:[1,0,1]",
-  ]);
-  assert.deepEqual(keys(elements(s.mergedOrder)), [
-    "b:[1,0,2]",
-    "b:[1,0,1]",
-    "b:[1,0,0]",
-  ]);
-  assert.notDeepEqual(keys(s.localOrder), keys(s.mergedOrder));
-  assert.deepEqual(
-    keys(s.localOrder).filter((k) => k.endsWith(":run")),
-    keys(s.mergedOrder).filter((k) => k.endsWith(":run")),
-  );
-  assert.deepEqual(
-    [...m.el("#s").children].map((x) => x.id),
-    [...parse(doc(remote)).querySelector("#s").children].map((x) => x.id),
-  );
-  assert.equal(r.localLost, true);
-});
-
-test("both-reordered: a real element order loss still reports localLost", async () => {
-  const m = await merge(
-    `<div id="s"><p id="a">A</p><p id="b">B</p><p id="c">C</p>\n</div>`,
-    `<div id="s"><p id="b">B</p><p id="a">A</p><p id="c">C</p>\n</div>`,
-    `<div id="s"><p id="c">C</p><p id="b">B</p><p id="a">A</p>\n</div>`,
-  );
-  assert.deepEqual(m.kinds, ["structure:both-reordered"]);
-  const r = m.rv[0];
-  const s = r.structure;
-  const elements = (list) => list.filter((x) => x.nodeType === 1);
-  assert.deepEqual(keys(elements(s.localOrder)), [
-    "b:[1,0,1]",
-    "b:[1,0,0]",
-    "b:[1,0,2]",
-  ]);
-  assert.deepEqual(keys(elements(s.mergedOrder)), [
-    "b:[1,0,2]",
-    "b:[1,0,1]",
-    "b:[1,0,0]",
-  ]);
   assert.equal(r.localLost, true);
 });

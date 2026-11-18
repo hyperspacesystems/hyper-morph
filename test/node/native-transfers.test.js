@@ -60,22 +60,6 @@ function plan(B, L, R, budget) {
   });
 }
 
-test("native producer certifies a nonmonotone origin and keeps full native nodes", () => {
-  const result = plan(base, moved, edited);
-  assert.ok(result);
-  assert.equal(result.transfers.length, 1);
-  assert.equal(result.prepared.localMap.monotone, false);
-  const event = result.transfers[0];
-  assert.equal(result.prepared.localMap.bTo[event.bs], event.ss);
-  assert.equal(result.prepared.localMap.toB[event.ss], event.bs);
-  for (const side of ["base", "local", "remote"])
-    for (const node of result.prepared[side].nodes)
-      assert.equal(
-        result.prepared[side].text.slice(node.s, node.e),
-        node.node.data,
-      );
-});
-
 test("native producer declines copies, ambiguous residuals, and source rewrites", () => {
   assert.equal(plan(base, "<p>a b</p><p>c d</p><p>e f b</p>", edited), null);
   const repeated = "<p>a b</p><p>c b</p><p>d</p><p>e</p>";

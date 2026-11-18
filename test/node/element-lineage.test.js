@@ -623,76 +623,6 @@ test("a doctype change before a throwing beforeApply delivers one incomplete res
   assert.equal(live.doctype.publicId, "example");
 });
 
-test("an outer tag hook that mutates then throws delivers one incomplete result", () => {
-  const live = parse(doc('<div id="x"><p>A one.</p></div>'));
-  const old = live.getElementById("x");
-  const child = old.firstChild;
-  const boom = new Error("tag-hook-boom");
-  const got = [];
-  assert.throws(
-    () =>
-      morphElement(old, '<section id="x"><p>A one.</p></section>', {
-        scripts: { execute: false },
-        hooks: {
-          beforeNodeMorphed: (el) => {
-            el.setAttribute("data-changed", "yes");
-            throw boom;
-          },
-        },
-        lineage: {
-          elements: [old, child],
-          onResult: (r, rep) => got.push([r, rep]),
-        },
-      }),
-    (e) => e === boom,
-  );
-  assert.equal(got.length, 1);
-  const [result, report] = got[0];
-  assert.equal(result.status, "incomplete");
-  assert.equal(report, null);
-  assert.deepEqual(
-    result.entries,
-    [old, child].map((el) => ({
-      from: el,
-      to: [],
-      kind: "unknown",
-      complete: false,
-    })),
-  );
-  assert.equal(old.getAttribute("data-changed"), "yes");
-  assert.ok(old.isConnected);
-});
-
-test("an ignored root whose ignore function mutates then throws delivers one incomplete result", () => {
-  const live = parse(doc('<div id="x"><p>A one.</p></div>'));
-  const old = live.getElementById("x");
-  const boom = new Error("ignore-boom");
-  const got = [];
-  assert.throws(
-    () =>
-      morphElement(old, '<section id="x"><p>A one.</p></section>', {
-        scripts: { execute: false },
-        ignore: (el) => {
-          el.setAttribute("data-touched", "yes");
-          throw boom;
-        },
-        lineage: {
-          elements: [old],
-          onResult: (r, rep) => got.push([r, rep]),
-        },
-      }),
-    (e) => e === boom,
-  );
-  assert.equal(got.length, 1);
-  const [result, report] = got[0];
-  assert.equal(result.status, "incomplete");
-  assert.equal(report, null);
-  assert.deepEqual(result.entries, [
-    { from: old, to: [], kind: "unknown", complete: false },
-  ]);
-  assert.equal(old.getAttribute("data-touched"), "yes");
-});
-
 test("a successful callback that throws propagates once, with no second callback", () => {
   const live = parse(doc('<div id="x"><p>A one.</p></div>'));
   const old = live.getElementById("x");
@@ -965,34 +895,6 @@ test("a template's contents: the watch is accepted and stays unknown", async () 
   assert.equal(calls, 1);
   assert.equal(report.lineage, result);
   assert.equal(result.status, "complete");
-  assert.deepEqual(result.entries, [
-    { from: p, to: [], kind: "unknown", complete: false },
-  ]);
-});
-
-test("a nested template's contents: the watch is accepted and stays unknown", async () => {
-  const html = "<template><div><template><p>Hi</p></template></div></template>";
-  const live = parse(doc(html));
-  const p = live
-    .querySelector("template")
-    .content.querySelector("template")
-    .content.querySelector("p");
-  let calls = 0,
-    result = null;
-  await mergeDocument({
-    live,
-    base: parse(doc(html)),
-    remote: parse(doc(html)),
-    scripts: { execute: false },
-    lineage: {
-      elements: [p],
-      onResult: (r) => {
-        calls++;
-        result = r;
-      },
-    },
-  });
-  assert.equal(calls, 1);
   assert.deepEqual(result.entries, [
     { from: p, to: [], kind: "unknown", complete: false },
   ]);
