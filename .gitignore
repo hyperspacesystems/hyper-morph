@@ -2,3 +2,4 @@
 node_modules
 coverage
 .chrome-for-testing/
+test-box-out/

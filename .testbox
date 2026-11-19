@@ -1,0 +1,12 @@
+# Runs the node suite (`npm run test:node` minus the oracle regressions) on a throwaway box: `testbox run`.
+# See ~/Documents/GitHub/bash_commands/testbox/README.md.
+TESTBOX_REPO=hyper-morph
+TESTBOX_SETUP='npm ci --no-audit --no-fund'
+# The oracle regressions (test/counterexamples/oracle-checks/oracle.test.js) build old engines with
+# `git archive`, and a box gets the files without git history, so they run only on this Mac.
+TESTBOX_COMMAND='node --test "test/node/**/*.test.js" test/counterexamples/corpus.test.js'
+# The vendor tests compare against ClayJS's vendored copies in the sibling checkout (../clayjs), so
+# those two files travel to the same path on the box.
+_clayjs="$(cd "$CONFIG_DIR/.." && pwd)/clayjs"
+TESTBOX_EXTRA_FILES=("$_clayjs/src/vendor/hyper-morph-json.vendor.js" "$_clayjs/src/vendor/hyper-morph-identity.vendor.js")
+TESTBOX_TIMEOUT=${TESTBOX_TIMEOUT:-20m}
